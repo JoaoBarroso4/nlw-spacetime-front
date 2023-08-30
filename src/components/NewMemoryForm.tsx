@@ -6,6 +6,8 @@ import { FormEvent } from "react";
 import { api } from "@/lib/api";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import { Toast } from "./Toast";
 
 export function NewMemoryForm() {
   const router = useRouter();
@@ -25,26 +27,45 @@ export function NewMemoryForm() {
 
       uploadFormData.set("file", fileToUpload);
 
-      const uploadResponse = await api.post("/upload", uploadFormData);
+      try {
+        const uploadResponse = await api.post("/upload", uploadFormData);
 
-      mediaUrl = uploadResponse.data.fileUrl;
+        mediaUrl = uploadResponse.data.fileUrl;
+      } catch (error) {
+        toast.error(
+          // @ts-ignore
+          `Erro ao fazer upload do arquivo: ${error.response.data.message}`
+        );
+      }
     }
 
     const token = Cookies.get("token");
 
-    api.post(
-      "/memories",
-      {
-        coverUrl: mediaUrl,
-        content: formData.get("content"),
-        isPublic: formData.get("isPublic"),
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
-    router.push("/");
+    try {
+      api
+        .post(
+          "/memories",
+          {
+            coverUrl: mediaUrl,
+            content: formData.get("content"),
+            isPublic: formData.get("isPublic"),
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
+        .then((dbResponse) => {
+          if (dbResponse.status === 201) {
+            router.push("/");
+            setTimeout(
+              () => toast.success("Memória cadastrada com sucesso."),
+              500
+            );
+          }
+        });
+    } catch (error) {
+      toast.error("Erro ao cadastrar memória.");
+    }
   }
 
   return (
@@ -86,6 +107,7 @@ export function NewMemoryForm() {
       >
         Salvar
       </button>
+      <Toast />
     </form>
   );
 }

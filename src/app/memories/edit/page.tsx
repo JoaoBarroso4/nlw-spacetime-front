@@ -5,6 +5,8 @@ import Cookies from "js-cookie";
 import { api } from "@/lib/api";
 import { Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import { Toast } from "@/components/Toast";
 
 interface Memory {
   id: string;
@@ -42,9 +44,10 @@ export default function EditMemoryForm(props: any) {
 
       if (apiResponse.status === 200) {
         router.push("/");
+        setTimeout(() => toast.success("Memória editada com sucesso."), 500);
       }
     } catch (error) {
-      console.log(error);
+      toast.error("Erro ao editar memória.");
     }
   }
 
@@ -56,7 +59,7 @@ export default function EditMemoryForm(props: any) {
         });
         setDbResponse(response.data);
       } catch (error) {
-        console.log(error);
+        toast.error("Erro ao carregar memória.");
       }
     }
 
@@ -136,6 +139,7 @@ export default function EditMemoryForm(props: any) {
       >
         Salvar
       </button>
+      <Toast />
     </form>
   );
 }

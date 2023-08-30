@@ -9,6 +9,8 @@ import ptBr from "dayjs/locale/pt-br";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { toast } from "react-toastify";
+import { Toast } from "./Toast";
 
 dayjs.locale(ptBr);
 
@@ -22,19 +24,22 @@ interface Memory {
 export function FilterMemoriesForm() {
   const token = Cookies.get("token");
 
-  const [beginDate, setBeginDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [beginDate, setBeginDate] = useState<string | null>("");
+  const [endDate, setEndDate] = useState<string | null>("");
 
-  const [memories, setMemories] = useState([]);
+  const [memories, setMemories] = useState<Memory[]>([]);
 
-  // fetches memories in the db everytime the page is loaded
   useEffect(() => {
     async function fetchMemories() {
-      const response = await api.get("/memories", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      try {
+        const response = await api.get("/memories", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      setMemories(response.data);
+        setMemories(response.data);
+      } catch (error) {
+        toast.error("Erro ao carregar memórias.");
+      }
     }
 
     fetchMemories();
@@ -45,14 +50,18 @@ export function FilterMemoriesForm() {
   ) {
     event.preventDefault();
 
-    const response = await api.get(
-      `/memories?beginDate=${beginDate}&endDate=${endDate}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    try {
+      const response = await api.get(
+        `/memories?beginDate=${beginDate}&endDate=${endDate}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    setMemories(response.data);
+      setMemories(response.data);
+    } catch (error) {
+      toast.error("Erro ao carregar memórias.");
+    }
   }
 
   return (
@@ -81,8 +90,7 @@ export function FilterMemoriesForm() {
           </button>
         </div>
       </form>
-      {memories.length === 0 && <EmptyMemories />}
-      {memories &&
+      {memories.length > 0 ? (
         memories.map((memory: Memory) => {
           return (
             <div key={memory.id} className="flex flex-col space-y-4">
@@ -118,7 +126,11 @@ export function FilterMemoriesForm() {
               </Link>
             </div>
           );
-        })}
+        })
+      ) : (
+        <EmptyMemories />
+      )}
+      <Toast />
     </>
   );
 }
