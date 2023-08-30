@@ -33,7 +33,38 @@ export default function EditMemoryForm(props: any) {
     const id = dbResponse.id;
     const content = formData.get("content");
     const isPublic = formData.get("isPublic");
-    const coverUrl = preview || dbResponse.coverUrl;
+    const fileToUpload = formData.get("media") as File;
+
+    let mediaUrl = "";
+
+    if (preview) {
+      const uploadFormData = new FormData();
+      uploadFormData.set("file", fileToUpload);
+
+      try {
+        await api.post("/upload", uploadFormData).then((response) => {
+          mediaUrl = response.data.fileUrl;
+        });
+        console.log(mediaUrl);
+
+        if (dbResponse.coverUrl) {
+          const oldFile = dbResponse.coverUrl.split("/").pop();
+          console.log(oldFile);
+
+          if (oldFile) {
+            await api.delete(`/upload/${oldFile}`);
+          }
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error(
+          // @ts-ignore
+          `Erro ao fazer upload do arquivo: ${error.response.data.message}`
+        );
+      }
+    }
+
+    const coverUrl = mediaUrl || dbResponse.coverUrl;
 
     try {
       const apiResponse = await api.put(
@@ -58,6 +89,12 @@ export default function EditMemoryForm(props: any) {
           headers: { Authorization: `Bearer ${token}` },
         });
         setDbResponse(response.data);
+
+        const isImage = response.data.coverUrl.match(/(png|jpe?g|gif)$/);
+        const isVideo = response.data.coverUrl.match(/(mp4|webm)$/);
+
+        if (isImage) setMediaType("image");
+        if (isVideo) setMediaType("video");
       } catch (error) {
         toast.error("Erro ao carregar memória.");
       }
@@ -68,16 +105,24 @@ export default function EditMemoryForm(props: any) {
     }
   }, [token, data]);
 
-  const [preview, setPreview] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string>("");
+  const [mediaType, setMediaType] = useState<"image" | "video">("image");
 
   function onFileSelected(event: ChangeEvent<HTMLInputElement>) {
     const { files } = event.target;
 
     if (!files) return;
 
-    const previewUrl = URL.createObjectURL(files[0]);
+    const file = files[0];
+    const previewUrl = URL.createObjectURL(file);
 
     setPreview(previewUrl);
+
+    const isImage = file.type.match(/(png|jpe?g|gif)$/);
+    const isVideo = file.type.match(/(mp4|webm)$/);
+
+    if (isImage) setMediaType("image");
+    if (isVideo) setMediaType("video");
   }
 
   return (
@@ -107,6 +152,11 @@ export default function EditMemoryForm(props: any) {
           Tornar memória pública
         </label>
       </div>
+      <div className="flex justify-end">
+        <p className="text-xs text-gray-200">
+          * Apenas arquivos de até 50 mb são suportados.
+        </p>
+      </div>
 
       <input
         onChange={onFileSelected}
@@ -116,13 +166,26 @@ export default function EditMemoryForm(props: any) {
         accept="image/*, video/*"
         className="invisible h-0 w-0"
       />
-      {dbResponse && (
-        // eslint-disable-next-line
-        <img
-          src={preview ? preview : dbResponse.coverUrl}
-          alt=""
-          className="w-full aspect-video rounded-lg object-cover"
-        />
+
+      {(preview || dbResponse) && (
+        <div className="w-full aspect-video rounded-lg overflow-hidden">
+          {mediaType === "image" ? (
+            // eslint-disable-next-line
+            <img
+              src={preview || dbResponse?.coverUrl}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <video
+              src={preview || dbResponse?.coverUrl}
+              className="w-full h-full object-cover"
+              controls
+            >
+              Your browser does not support video playback.
+            </video>
+          )}
+        </div>
       )}
 
       <textarea

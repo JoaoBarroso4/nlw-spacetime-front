@@ -16,7 +16,6 @@ export function NewMemoryForm() {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    console.log(formData);
 
     const fileToUpload = formData.get("media") as File;
 
@@ -91,6 +90,9 @@ export function NewMemoryForm() {
           />
           Tornar memória pública
         </label>
+      </div>
+      <div className="flex justify-end">
+        <p className="text-xs text-gray-200">* Apenas arquivos de até 50 mb são suportados.</p>
       </div>
 
       <MediaPicker />

@@ -64,6 +64,13 @@ export function FilterMemoriesForm() {
     }
   }
 
+  function defineFileType(fileUrl: string): string {
+    const isImage = fileUrl.match(/(png|jpe?g|gif)$/);
+    const isVideo = fileUrl.match(/(mp4|webm)$/);
+
+    return isImage ? "image" : isVideo ? "video" : "";
+  }
+
   return (
     <>
       <form onSubmit={handleMemoriesFilterByDate}>
@@ -97,13 +104,24 @@ export function FilterMemoriesForm() {
               <time className="flex items-center gap-2 text-sm text-gray-100 -ml-8 before:h-px before:w-5 before:bg-gray-50">
                 {dayjs(memory.createdAt).format("D [ de ]MMMM[, ] YYYY")}
               </time>
-              <Image
-                src={memory.coverUrl}
-                width={592}
-                height={280}
-                className="w-full aspect-video object-cover rounded-lg"
-                alt=""
-              />
+              {defineFileType(memory.coverUrl) === "image" && (
+                <Image
+                  src={memory.coverUrl}
+                  width={592}
+                  height={280}
+                  className="w-full aspect-video object-cover rounded-lg"
+                  alt=""
+                />
+              )}
+              {defineFileType(memory.coverUrl) === "video" && (
+                <video
+                  src={memory.coverUrl}
+                  className="w-full aspect-video rounded-lg object-cover"
+                  controls
+                >
+                  Seu navegador não possui suporte para a reprodução de vídeos.
+                </video>
+              )}
               <p className="text-lg leading-relaxed text-gray-100">
                 {memory.content}
               </p>
