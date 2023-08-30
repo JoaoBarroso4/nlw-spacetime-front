@@ -7,12 +7,13 @@ A aplicação é uma cápsula do tempo digital. O usuário é capaz de cadastrar
 ## To go further (melhorias)
 Esta é uma lista com os desafios propostos pela RocketSeat para melhorar a aplicação, junto com alguns outros de minha parte.
 
-- [] upload de videos pelo front
-- [] limite de tamanho para upload
+- [ ] upload de videos pelo front
+- [ ] limite de tamanho para upload
 
 - [X] edição da memória
-- [] link para compartilhar memória
+- [ ] deleção da memória
+- [ ] link para compartilhar memória
 - [X] selecionar data da memória
-- [] layout responsivo
+- [ ] layout responsivo
 
-- [] Notificações com toastify (erro, sucesso)
+- [X] Notificações com toastify (erro, sucesso)
