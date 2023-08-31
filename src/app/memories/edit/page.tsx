@@ -1,12 +1,21 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  useEffect,
+  useState,
+  Fragment,
+  useRef,
+} from "react";
 import Cookies from "js-cookie";
 import { api } from "@/lib/api";
-import { Camera } from "lucide-react";
+import { Camera, ChevronLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { Toast } from "@/components/Toast";
+import Link from "next/link";
+import { CustomModal } from "@/components/Modal";
 
 interface Memory {
   id: string;
@@ -49,7 +58,6 @@ export default function EditMemoryForm(props: any) {
 
         if (dbResponse.coverUrl) {
           const oldFile = dbResponse.coverUrl.split("/").pop();
-          console.log(oldFile);
 
           if (oldFile) {
             await api.delete(`/upload/${oldFile}`);
@@ -125,84 +133,142 @@ export default function EditMemoryForm(props: any) {
     if (isVideo) setMediaType("video");
   }
 
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const cancelButtonRef = useRef(null);
+
+  async function handleDeleteMemory() {
+    const id = dbResponse?.id;
+
+    if (!id) return;
+
+    try {
+      const deleteMemoryResponse = await api.delete(`/memories/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const fileName = dbResponse.coverUrl.split("/").pop();
+
+      const deleteFileResponse = await api.delete(`/upload/${fileName}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (
+        deleteMemoryResponse.status === 204 &&
+        deleteFileResponse.status === 204
+      ) {
+        router.push("/");
+        setTimeout(() => toast.success("Memória deletada com sucesso."), 500);
+      }
+    } catch (error) {
+      toast.error("Erro ao deletar memória.");
+    }
+  }
+
   return (
-    <form
-      onSubmit={handleEditMemory}
-      className="flex flex-1 flex-col gap-2 p-8"
-    >
-      <div className="flex items-center gap-4">
-        <label
-          htmlFor="media"
-          className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-200 hover:text-gray-100"
-        >
-          <Camera className="h-4 w-4" />
-          Anexar mídia
-        </label>
-        <label
-          htmlFor="isPublic"
-          className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-200 hover:text-gray-100"
-        >
-          <input
-            type="checkbox"
-            name="isPublic"
-            id="isPublic"
-            defaultChecked={dbResponse ? dbResponse.isPublic : false}
-            className="h-4 w-4 rounded border-gray-400 bg-gray-700 text-purple-500"
-          />
-          Tornar memória pública
-        </label>
-      </div>
-      <div className="flex justify-end">
-        <p className="text-xs text-gray-200">
-          * Apenas arquivos de até 50 mb são suportados.
-        </p>
-      </div>
-
-      <input
-        onChange={onFileSelected}
-        type="file"
-        name="media"
-        id="media"
-        accept="image/*, video/*"
-        className="invisible h-0 w-0"
-      />
-
-      {(preview || dbResponse) && (
-        <div className="w-full aspect-video rounded-lg overflow-hidden">
-          {mediaType === "image" ? (
-            // eslint-disable-next-line
-            <img
-              src={preview || dbResponse?.coverUrl}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <video
-              src={preview || dbResponse?.coverUrl}
-              className="w-full h-full object-cover"
-              controls
-            >
-              Your browser does not support video playback.
-            </video>
-          )}
-        </div>
-      )}
-
-      <textarea
-        name="content"
-        spellCheck={false}
-        className="w-full flex-1 resize-none roudned border-0 bg-transparent p-0 text-lg leading-relaxed text-gray-100 placeholder:text-gray-400 focus:ring-0"
-        placeholder="Fique livre para adicionar fotos, vídeos e relatos sobre essa experiência que você quer lembrar para sempre."
-        defaultValue={dbResponse ? dbResponse.content : ""}
-      />
-
-      <button
-        type="submit"
-        className="inline-block self-end rounded-full bg-green-500 px-5 py-3 font-alt text-sm uppercase leading-none text-black hover:bg-green-600"
+    <>
+      <form
+        onSubmit={handleEditMemory}
+        className="flex flex-1 flex-col gap-2 p-8"
       >
-        Salvar
-      </button>
+        <Link
+          href="/"
+          className="flex items-center gap-1 text-sm text-gray-200 hover:text-gray-100"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Voltar à timeline
+        </Link>
+        <div className="flex items-center gap-4">
+          <label
+            htmlFor="media"
+            className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-200 hover:text-gray-100"
+          >
+            <Camera className="h-4 w-4" />
+            Anexar mídia
+          </label>
+          <label
+            htmlFor="isPublic"
+            className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-200 hover:text-gray-100"
+          >
+            <input
+              type="checkbox"
+              name="isPublic"
+              id="isPublic"
+              defaultChecked={dbResponse ? dbResponse.isPublic : false}
+              className="h-4 w-4 rounded border-gray-400 bg-gray-700 text-purple-500"
+            />
+            Tornar memória pública
+          </label>
+        </div>
+        <div className="flex justify-end">
+          <p className="text-xs text-gray-200">
+            * Apenas arquivos de até 50 mb são suportados.
+          </p>
+        </div>
+
+        <input
+          onChange={onFileSelected}
+          type="file"
+          name="media"
+          id="media"
+          accept="image/*, video/*"
+          className="invisible h-0 w-0"
+        />
+
+        {(preview || dbResponse) && (
+          <div className="w-full aspect-video rounded-lg overflow-hidden">
+            {mediaType === "image" ? (
+              // eslint-disable-next-line
+              <img
+                src={preview || dbResponse?.coverUrl}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <video
+                src={preview || dbResponse?.coverUrl}
+                className="w-full h-full object-cover"
+                controls
+              >
+                Your browser does not support video playback.
+              </video>
+            )}
+          </div>
+        )}
+
+        <textarea
+          name="content"
+          spellCheck={false}
+          className="w-full flex-1 resize-none roudned border-0 bg-transparent p-0 text-lg leading-relaxed text-gray-100 placeholder:text-gray-400 focus:ring-0"
+          placeholder="Fique livre para adicionar fotos, vídeos e relatos sobre essa experiência que você quer lembrar para sempre."
+          defaultValue={dbResponse ? dbResponse.content : ""}
+        />
+
+        <div className="flex flex-row justify-between">
+          <button
+            onClick={() => setModalOpen(true)}
+            type="button"
+            className="rounded-full bg-red-500 px-5 py-3 font-alt text-sm uppercase leading-none text-black hover:bg-red-600"
+          >
+            Deletar memória
+          </button>
+          <button
+            type="submit"
+            className="rounded-full bg-green-500 px-5 py-3 font-alt text-sm uppercase leading-none text-black hover:bg-green-600"
+          >
+            Salvar
+          </button>
+        </div>
+      </form>
       <Toast />
-    </form>
+
+      <CustomModal
+        open={modalOpen}
+        setOpen={setModalOpen}
+        title="Deletar memória"
+        content="Você tem certeza que deseja excluir esta memória? Esta ação não pode ser desfeita."
+        actionText="Deletar memória"
+        handleAction={handleDeleteMemory}
+      />
+    </>
   );
 }
