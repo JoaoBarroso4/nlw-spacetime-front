@@ -11,9 +11,10 @@ Esta é uma lista com os desafios propostos pela RocketSeat para melhorar a apli
 - [X] limite de tamanho para upload
 
 - [X] edição da memória
-- [ ] deleção da memória
+- [X] deleção da memória
 - [ ] link para compartilhar memória
 - [X] selecionar data da memória
 - [ ] layout responsivo
+- [X] loading entre páginas
 
 - [X] Notificações com toastify (erro, sucesso)
