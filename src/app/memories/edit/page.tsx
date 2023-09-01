@@ -41,7 +41,7 @@ export default function EditMemoryForm(props: any) {
     const formData = new FormData(event.currentTarget);
     const id = dbResponse.id;
     const content = formData.get("content");
-    const isPublic = formData.get("isPublic");
+    const isPublic = formData.get("isPublic") === "on" ? true : false;
     const fileToUpload = formData.get("media") as File;
 
     let mediaUrl = "";
@@ -73,7 +73,7 @@ export default function EditMemoryForm(props: any) {
     }
 
     const coverUrl = mediaUrl || dbResponse.coverUrl;
-
+    console.log({ coverUrl, content, isPublic });
     try {
       const apiResponse = await api.put(
         `/memories/${id}`,
@@ -98,19 +98,15 @@ export default function EditMemoryForm(props: any) {
         });
         setDbResponse(response.data);
 
-        const isImage = response.data.coverUrl.match(/(png|jpe?g|gif)$/);
-        const isVideo = response.data.coverUrl.match(/(mp4|webm)$/);
-
-        if (isImage) setMediaType("image");
-        if (isVideo) setMediaType("video");
+        setMediaType(
+          response.data.coverUrl.match(/(png|jpe?g|gif)$/) ? "image" : "video"
+        );
       } catch (error) {
         toast.error("Erro ao carregar memória.");
       }
     }
 
-    if (token) {
-      fetchMemoryData();
-    }
+    if (token) fetchMemoryData();
   }, [token, data]);
 
   const [preview, setPreview] = useState<string>("");
@@ -166,10 +162,7 @@ export default function EditMemoryForm(props: any) {
 
   return (
     <>
-      <form
-        onSubmit={handleEditMemory}
-        className="flex flex-1 flex-col gap-2 p-8"
-      >
+      <form onSubmit={handleEditMemory} className="flex flex-col gap-2 p-8">
         <Link
           href="/"
           className="flex items-center gap-1 text-sm text-gray-200 hover:text-gray-100"

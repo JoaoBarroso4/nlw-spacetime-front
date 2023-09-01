@@ -2,7 +2,7 @@ import { EmptyMemories } from "@/components/EmptyMemories";
 import { cookies } from "next/headers";
 import { FilterMemoriesForm } from "@/components/FilterMemoriesForm";
 
-export default async function Home() {
+export default function Home() {
   const isAuthenticated = cookies().has("token");
 
   if (!isAuthenticated) return <EmptyMemories />;

@@ -19,6 +19,7 @@ interface Memory {
   coverUrl: string;
   content: string;
   createdAt: string;
+  isPublic: boolean;
 }
 
 export function FilterMemoriesForm() {
@@ -69,6 +70,14 @@ export function FilterMemoriesForm() {
     const isVideo = fileUrl.match(/(mp4|webm)$/);
 
     return isImage ? "image" : isVideo ? "video" : "";
+  }
+
+  function handleShareMemory(event: React.MouseEvent<HTMLButtonElement>) {
+    const memoryId = event.currentTarget.value;
+    navigator.clipboard.writeText(
+      `${window.location.href}/memories/shared?data=${memoryId}`
+    );
+    toast.success("Link copiado para a área de transferência.");
   }
 
   return (
@@ -125,23 +134,35 @@ export function FilterMemoriesForm() {
               <p className="text-lg leading-relaxed text-gray-100">
                 {memory.content}
               </p>
-              {memory.content.endsWith("...") && (
+              <div className="flex flex-row justify-between">
+                {memory.content.endsWith("...") && (
+                  <Link
+                    href={`/memories/${memory.id}`}
+                    className="flex items-center gap-2 text-sm text-gray-200 hover:text-gray-100"
+                  >
+                    Ler mais <ArrowRight className="w-4 h-4" />
+                  </Link>
+                )}
+                {memory.isPublic && (
+                  <button
+                    type="button"
+                    onClick={handleShareMemory}
+                    value={memory.id}
+                    className="rounded-full bg-green-500 px-5 py-3 font-alt text-sm uppercase leading-none text-black hover:bg-green-600"
+                  >
+                    Compartilhar
+                  </button>
+                )}
                 <Link
-                  href={`/memories/${memory.id}`}
-                  className="flex items-center gap-2 text-sm text-gray-200 hover:text-gray-100"
+                  href={{
+                    pathname: "/memories/edit",
+                    query: { data: memory.id },
+                  }}
+                  className="rounded-full bg-green-500 px-5 py-3 font-alt text-sm uppercase leading-none text-black hover:bg-green-600"
                 >
-                  Ler mais <ArrowRight className="w-4 h-4" />
+                  Editar memória
                 </Link>
-              )}
-              <Link
-                href={{
-                  pathname: "/memories/edit",
-                  query: { data: memory.id },
-                }}
-                className="inline-block self-end rounded-full bg-green-500 px-5 py-3 font-alt text-sm uppercase leading-none text-black hover:bg-green-600"
-              >
-                Editar memória
-              </Link>
+              </div>
             </div>
           );
         })
