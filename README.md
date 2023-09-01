@@ -12,7 +12,7 @@ Esta é uma lista com os desafios propostos pela RocketSeat para melhorar a apli
 
 - [X] edição da memória
 - [X] deleção da memória
-- [ ] link para compartilhar memória
+- [X] link para compartilhar memória
 - [X] selecionar data da memória
 - [ ] layout responsivo
 - [X] loading entre páginas
